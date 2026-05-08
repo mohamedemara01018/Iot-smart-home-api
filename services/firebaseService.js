@@ -38,6 +38,7 @@ async function saveRecognizedPersonLog(log) {
   };
 
   await ref.set(savedLog);
+  await setDoorStatus(savedLog.name == 'unknown' ? 'CLOSED' : 'OPEN')
 
   return {
     id: ref.key,
