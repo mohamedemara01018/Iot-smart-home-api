@@ -6,20 +6,29 @@ const swaggerUi = require("swagger-ui-express");
 const swaggerJsdoc = require("swagger-jsdoc");
 require("dotenv").config();
 
+// Routes
 const sensorRoutes = require("./routes/sensorRoutes");
 const doorRoutes = require("./routes/doorRoutes");
 const lightRoutes = require("./routes/lightRoutes");
 
+// MQTT
+const { connectMqtt } = require("./services/mqttService");
+
 const app = express();
+
+// ================= ENV =================
 const PORT = process.env.PORT || 8000;
+const isProd = process.env.NODE_ENV === "production";
 
-// Middleware
+// ================= MIDDLEWARE =================
 app.use(helmet());
-app.use(cors());
+app.use(cors({
+  origin: "*", // ممكن تقفلها بعدين على frontend domain
+}));
 app.use(express.json());
-app.use(morgan(process.env.NODE_ENV === "production" ? "combined" : "dev"));
+app.use(morgan(isProd ? "combined" : "dev"));
 
-/* ================= SWAGGER SPEC ================= */
+// ================= SWAGGER =================
 const swaggerSpec = swaggerJsdoc({
   definition: {
     openapi: "3.0.0",
@@ -27,41 +36,40 @@ const swaggerSpec = swaggerJsdoc({
       title: "Smart Home IoT Backend API",
       version: "1.0.0",
       description:
-        "REST APIs for sensors, door control, light control, and face recognition logs.",
+        "REST APIs for sensors, door control, light control, and logs.",
     },
     servers: [
       {
-        url:
-          process.env.NODE_ENV === "production"
-            ? "https://iot-smart-home-api.vercel.app"
-            : "http://localhost:8000",
+        url: process.env.BASE_URL || `http://localhost:${PORT}`,
       },
     ],
   },
   apis: ["./routes/*.js"],
 });
 
-/* ================= SWAGGER ROUTES ================= */
-app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
-
+// ================= SWAGGER JSON (IMPORTANT FOR DEPLOY) =================
 app.get("/api-docs-json", (req, res) => {
   res.json(swaggerSpec);
 });
 
-/* ================= ROOT ================= */
+// ================= SWAGGER UI =================
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
+// ================= ROOT =================
 app.get("/", (req, res) => {
   res.json({
-    message: "Smart Home IoT backend is running",
+    message: "Smart Home IoT backend is running 🚀",
     docs: "/api-docs",
+    swagger_json: "/api-docs-json",
   });
 });
 
-/* ================= API ROUTES ================= */
+// ================= API ROUTES =================
 app.use("/api", sensorRoutes);
 app.use("/api", doorRoutes);
 app.use("/api", lightRoutes);
 
-/* ================= 404 ================= */
+// ================= 404 =================
 app.use((req, res) => {
   res.status(404).json({
     success: false,
@@ -69,7 +77,7 @@ app.use((req, res) => {
   });
 });
 
-/* ================= ERROR HANDLER ================= */
+// ================= ERROR HANDLER =================
 app.use((err, req, res, next) => {
   console.error(err);
 
@@ -79,13 +87,18 @@ app.use((err, req, res, next) => {
   });
 });
 
-/* ================= VERCEL EXPORT ================= */
+// ================= MQTT (SAFE FOR PROD) =================
+if (process.env.ENABLE_MQTT === "true") {
+  connectMqtt();
+}
+
+// ================= VERCEL EXPORT =================
 module.exports = app;
 
-/* ================= LOCAL ONLY ================= */
-if (process.env.NODE_ENV !== "production") {
+// ================= LOCAL SERVER ONLY =================
+if (!isProd) {
   app.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
-    console.log(`Swagger docs: http://localhost:${PORT}/api-docs`);
+    console.log(`🚀 Server running on http://localhost:${PORT}`);
+    console.log(`📚 Swagger: http://localhost:${PORT}/api-docs`);
   });
 }
