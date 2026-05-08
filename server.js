@@ -30,7 +30,7 @@ const swaggerSpec = swaggerJsdoc({
     },
     servers: [
       {
-        url: `http://localhost:${PORT}`,
+        url: `https://iot-smart-home-api.vercel.app`,
         description: 'Local development server'
       }
     ]
@@ -69,6 +69,11 @@ app.use((err, req, res, next) => {
     success: false,
     message: err.message || 'Internal server error'
   });
+});
+
+
+app.use("*", (req, res) => {
+  res.status(404).json({ message: "Not found" });
 });
 
 app.listen(PORT, () => {
