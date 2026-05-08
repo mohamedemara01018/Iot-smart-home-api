@@ -3,7 +3,8 @@ const {
   getDoor,
   openDoor,
   closeDoor,
-  saveDoorLog
+  saveDoorLog,
+  getLogs
 } = require('../controllers/doorController');
 
 const router = express.Router();
@@ -72,5 +73,7 @@ router.post('/closedoor', closeDoor);
  *         description: Missing name.
  */
 router.post('/savedoor', saveDoorLog);
+
+router.get('/logs', getLogs)
 
 module.exports = router;

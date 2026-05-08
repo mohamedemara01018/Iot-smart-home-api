@@ -1,7 +1,8 @@
 const {
   getDoorStatus,
   setDoorStatus,
-  saveRecognizedPersonLog
+  saveRecognizedPersonLog,
+  getLogsFirebase
 } = require('../services/firebaseService');
 const { publishCommand } = require('../services/mqttService');
 
@@ -71,9 +72,26 @@ async function saveDoorLog(req, res, next) {
   }
 }
 
+
+async function getLogs(req, res, next) {
+  try {
+
+    const logs = await getLogsFirebase();
+
+    res.status(201).json({
+      success: true,
+      logs
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+
 module.exports = {
   getDoor,
   openDoor,
   closeDoor,
-  saveDoorLog
+  saveDoorLog,
+  getLogs
 };

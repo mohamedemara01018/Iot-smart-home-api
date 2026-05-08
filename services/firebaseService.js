@@ -45,6 +45,13 @@ async function saveRecognizedPersonLog(log) {
   };
 }
 
+
+async function getLogsFirebase() {
+  const snapshot = await database.ref(`logs`).once('value');
+  return snapshot.val();
+}
+
+
 module.exports = {
   setSensorValue,
   getSensorValue,
@@ -52,5 +59,6 @@ module.exports = {
   getDoorStatus,
   setLightStatus,
   getLightStatus,
-  saveRecognizedPersonLog
+  saveRecognizedPersonLog,
+  getLogsFirebase
 };
